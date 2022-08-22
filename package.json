@@ -1,0 +1,36 @@
+{
+	"name": "aarcho-api",
+	"version": "0.1.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server",
+		"dev": "nodemon server",
+		"build": "npm run build"
+	},
+	"author": "Aarcho Inc",
+	"license": "ISC",
+	"dependencies": {
+		"@google-cloud/storage": "^6.1.0",
+		"@sendgrid/mail": "^7.4.6",
+		"bcryptjs": "^2.4.3",
+		"body-parser": "^1.19.0",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.1",
+		"express": "^4.18.1",
+		"express-validator": "^6.9.2",
+		"ip": "^1.1.5",
+		"jsonwebtoken": "^8.5.1",
+		"loadtest": "^5.1.2",
+		"morgan": "^1.10.0",
+		"multer": "^1.4.2",
+		"multer-google-storage": "^1.3.0",
+		"node-sass": "^7.0.1",
+		"nodemailer": "^6.5.0",
+		"nodemailer-sendgrid-transport": "^0.2.0",
+		"npm": "^8.10.0",
+		"pg": "^8.5.1",
+		"stripe": "^8.165.0"
+	}
+}
