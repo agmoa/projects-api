@@ -26,8 +26,8 @@ exports.signup = (request, response, next) => {
 	}
 
 	const email = request.body.email;
-	// const username =
-	// 	request.body.first_name.toLowerCase() + "_" + crypto.randomBytes(4).toString("hex");
+	const username =
+		request.body.first_name.toLowerCase() + "_" + crypto.randomBytes(4).toString("hex");
 	const password = request.body.password;
 	const first_name = request.body.first_name;
 	const last_name = request.body.last_name;
@@ -35,39 +35,38 @@ exports.signup = (request, response, next) => {
 	const is_active = true;
 	const initial_terms_accepted = true;
 	const date_joined = new Date();
+	const project = request.body.project;
 
 	// Create User Account SQL
 	const CreateAccountSQL = `
     INSERT INTO
-        users_user(email, password, first_name, last_name,
-        is_active, initial_terms_accepted, date_joined)
-        VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *  
+        users_user(email, username, password, first_name, last_name,
+        is_active, initial_terms_accepted, date_joined, project)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *  
   `;
 
 	// Setup User Account SQL
 	const SetupAccountSQL = `
   WITH X AS (
-      INSERT INTO users_user_birthday (uid) 
-      VALUES($1) RETURNING uid
-      ), Y as (
-		INSERT INTO pages_page (uid, is_default)
-		SELECT uid, 'true' FROM X
-		RETURNING *
-	)
-      INSERT INTO tracker_dash (page_uid)
-      SELECT page_uid FROM Y
+      INSERT INTO users_user_birthday (email) 
+      VALUES($1) RETURNING email
+      )
+		INSERT INTO users_user_profile (email)
+		SELECT email FROM X
 `;
 
 	bcrypt.hash(password, SALT_ROUND, function (err, hashedPassword) {
 		if (err == null)
 			db.query(CreateAccountSQL, [
 				email,
+				username,
 				hashedPassword,
 				first_name,
 				last_name,
 				is_active,
 				initial_terms_accepted,
 				date_joined,
+				project,
 			])
 				.then(res => {
 					const uid = res.rows[0].uid;
@@ -76,7 +75,7 @@ exports.signup = (request, response, next) => {
 					const first_name = res.rows[0].first_name;
 
 					/* Account Setup Database Instance */
-					db.query(SetupAccountSQL, [uid])
+					db.query(SetupAccountSQL, [email])
 						.then(res => console.log("DONE"))
 						.catch(err => {
 							console.log(err);
