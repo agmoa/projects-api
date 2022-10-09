@@ -1,50 +1,7 @@
 /* FUNCTIONS */
-
 CREATE EXTENSION pgcrypto;
 
 SELECT usename FROM pg_user
-
-
-/* ========================= 
-	 generate_uid
-========================== */
- 
-CREATE OR REPLACE FUNCTION generate_uid(size INT) RETURNS TEXT AS $$
-DECLARE
-  characters TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  bytes BYTEA := gen_random_bytes(size);
-  l INT := length(characters);
-  i INT := 0;
-  output TEXT := '';
-BEGIN
-  WHILE i < size LOOP
-    output := output || substr(characters, get_byte(bytes, i) % l + 1, 1);
-    i := i + 1;
-  END LOOP;
-  RETURN output;
-END;
-$$ LANGUAGE plpgsql VOLATILE;
-
-
-/* ========================= 
-	 gen_uid
-========================== */
- 
-CREATE OR REPLACE FUNCTION gen_uid(kind VARCHAR, size INT) RETURNS TEXT AS $$
-DECLARE
-  characters TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  bytes BYTEA := gen_random_bytes(size);
-  l INT := length(characters);
-  i INT := 0;
-  output TEXT := '';
-BEGIN
-  WHILE i < size LOOP
-    output := output || substr(characters, get_byte(bytes, i) % l + 1, 1);
-    i := i + 1;
-  END LOOP;
-  RETURN CONCAT (kind, '_', output);
-END;
-$$ LANGUAGE plpgsql VOLATILE;
 
 
 /* ========== AUTO UPDATE TIME ========== */
@@ -73,6 +30,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 /* ==== USERS ==== */
 SELECT * FROM users_user ORDER BY user_id;
 SELECT * FROM users_user_profile ORDER BY id;
+SELECT * FROM users_user_terms ORDER BY id; 
 
 SELECT * FROM forms_contact ORDER BY id; 
 
@@ -84,17 +42,12 @@ SELECT * FROM arumly_shop_object;
 SELECT * FROM arumly_checkout;
 SELECT * FROM arumly_checkout_cart;
 
-d2tzfaypyF4ZEAw7tDGiIuGZ9IUTit
-XSQ6fWDjrB9gBEgXMvISHgkmIGVICP
-6l7AQOyXj80aD0dDyGAUPKpV6wbEXS
-rNGDiIMFu8sK9H3IfxABmsQBap7D88
-/* ========================= 
-        ALTER TABLES
-========================== */
-ALTER TABLE arumly_shop_object ADD COLUMN thumbnail VARCHAR(300)
+
+ALTER TABLE users_user_terms ADD COLUMN email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE
 
 ALTER TABLE arumly_shop_object
 ADD COLUMN obj_uid VARCHAR(32) DEFAULT generate_uid(30) UNIQUE
+
 
 /* ========================= 
 		ACCOUNT
@@ -127,24 +80,23 @@ CREATE TABLE users_user(
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	
 	initial_terms_accepted BOOLEAN DEFAULT false
-);
+); -- 10/7/22
 
 CREATE TABLE users_user_terms(
-	account_terms_id BIGSERIAl UNIQUE PRIMARY KEY NOT NULL,
+	id BIGSERIAl UNIQUE PRIMARY KEY NOT NULL,
+	email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE
 	
 	terms_type VARCHAR NOT NULL,
 	title VARCHAR NOT NULL,
 	terms_version VARCHAR NOT NULL,
 	short_description TEXT,
 	accepted BOOLEAN DEFAULT false,
-	date_commited TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-
-	uid VARCHAR REFERENCES users_user (uid) ON UPDATE CASCADE ON DELETE CASCADE
-);
+	date_commited TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+); -- 10/7/22
 
 CREATE TABLE users_user_profile(
 	id BIGSERIAL PRIMARY KEY UNIQUE, 
-	uid VARCHAR REFERENCES users_user (uid) ON UPDATE CASCADE ON DELETE CASCADE,
+	email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE,
     
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -157,16 +109,57 @@ CREATE TABLE users_user_profile(
     
 	avatar VARCHAR(300) NULL,
 	banner VARCHAR(300) NULL,
-    resume VARCHAR(300) NULL,
+    resume VARCHAR(500) NULL,
     skills TEXT NULL,
 
-    socials_email VARCHAR(300) NULL,
-    socials_linkedin VARCHAR(300) NULL,
-    socials_instagram VARCHAR(300) NULL,
-    socials_twitter VARCHAR(300) NULL,
-    socials_youtube VARCHAR(300) NULL,
-    socials_facebook VARCHAR(300) NULL
-);
+    socials_email TEXT NULL,
+    socials_linkedin TEXT NULL,
+    socials_instagram TEXT NULL,
+    socials_twitter TEXT NULL,
+    socials_youtube TEXT NULL,
+    socials_facebook TEXT NULL
+); -- 10/7/22
+
+CREATE TABLE users_user_pwd(
+	pwd_id BIGSERIAL PRIMARY KEY,
+	
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	
+	email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE,	
+	
+	password VARCHAR(128) DEFAULT generate_uid(45) UNIQUE NOT NULL
+); -- 10/7/22
+
+CREATE TABLE users_user_birthday(
+	id BIGSERIAL PRIMARY KEY,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+	email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE,
+	
+	month SMALLINT DEFAULT 1,
+    day SMALLINT DEFAULT 1,
+	year SMALLINT DEFAULT 1
+
+);	-- 10/7/22
+
+CREATE TABLE users_user_address(
+	id BIGSERIAl UNIQUE PRIMARY KEY NOT NULL,
+
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	
+	email VARCHAR REFERENCES users_user (email) ON UPDATE CASCADE ON DELETE CASCADE,
+	
+	full_name VARCHAR NOT NULL,
+	address VARCHAR NOT NULL,
+	address_sub VARCHAR,
+	city VARCHAR NOT NULL,
+	state VARCHAR NOT NULL,
+	zip_code VARCHAR NOT NULL NOT NULL,
+	country VARCHAR NOT NULL,
+	default_address BOOLEAN DEFAULT false
+); -- 10/7/22
 
 /* ========================= 
         PROJECTS

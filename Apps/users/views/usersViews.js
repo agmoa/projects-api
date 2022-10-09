@@ -111,7 +111,7 @@ exports.getUserProfile = (request, response, next) => {
 		pr.socials_facebook
 
     FROM users_user uu
-	LEFT JOIN users_user_profile pr ON uu.uid = pr.uid
+	LEFT JOIN users_user_profile pr ON uu.email = pr.email
     WHERE username=($1)
     `,
 	};
@@ -159,7 +159,6 @@ exports.updateAccountInfo = (request, response, next) => {
 exports.updateAccountEmail = (request, response, next) => {
 	const uid = request.params.uid;
 	const email = request.body.email;
-	console.log(request.body);
 	const errors = validationResult(request);
 
 	if (!errors.isEmpty()) {
