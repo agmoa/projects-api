@@ -5,7 +5,7 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { sendLoginEmail, sendWelcomeEmail } = require("../../app/emails/accountEmails");
+// const { sendLoginEmail, sendWelcomeEmail } = require("../../app/emails/accountEmails");
 
 const crypto = require("crypto");
 
@@ -76,7 +76,8 @@ exports.signup = (request, response, next) => {
 
 					/* Account Setup Database Instance */
 					db.query(SetupAccountSQL, [email])
-						.then(res => console.log("DONE"))
+						// .then(res => console.log("DONE"))
+						.then()
 						.catch(err => {
 							console.log(err);
 							if (err) {
@@ -107,7 +108,7 @@ exports.signup = (request, response, next) => {
 					});
 
 					/* Emailer - Welcome Email */
-					sendWelcomeEmail(email, first_name);
+					// sendWelcomeEmail(email, first_name);
 				})
 
 				.catch(err => {
@@ -143,7 +144,6 @@ exports.login = (req, res, next) => {
 				throw error;
 			}
 			grabbedUser = user;
-			console.log(user.rows[0].password);
 			return bcrypt.compare(password, user.rows[0].password);
 		})
 		.then(isEqual => {
@@ -179,7 +179,7 @@ exports.login = (req, res, next) => {
 		})
 
 		.then(() => {
-			sendLoginEmail(grabbedUser.rows[0].email, grabbedUser.rows[0].first_name);
+			// sendLoginEmail(grabbedUser.rows[0].email, grabbedUser.rows[0].first_name);
 		})
 
 		.catch(err => {
@@ -191,7 +191,7 @@ exports.login = (req, res, next) => {
 };
 
 exports.loggedUser = (request, response, next) => {
-	const uid = request.uid;
+	const email = request.email;
 
 	const query = {
 		text: `
@@ -208,7 +208,7 @@ exports.loggedUser = (request, response, next) => {
         ub.year
     
       FROM users_user_birthday ub
-      WHERE u.uid = ub.uid
+      WHERE u.email = ub.email
       ) AS user_birthday
   	) AS dob,
 
@@ -235,18 +235,16 @@ exports.loggedUser = (request, response, next) => {
 		pr.socials_facebook
     
       FROM users_user_profile pr
-      WHERE u.uid = pr.uid
+      WHERE u.email = pr.email
       ) AS user_profile
-  	) AS dob,
-
-	
+  	) AS profile
 
     FROM users_user u
-    WHERE u.uid=($1)
+    WHERE u.email=($1)
     `,
 	};
 
-	db.query(query, [uid])
+	db.query(query, [email])
 		.then(res => {
 			response.json(res.rows[0]);
 		})
@@ -280,7 +278,6 @@ exports.checkPassword = (req, res, next) => {
 				throw error;
 			}
 			grabbedUser = user;
-			// console.log(grabbedUser.rows[0].uid);
 			return bcrypt.compare(password, user.rows[0].password);
 		})
 		.then(isEqual => {

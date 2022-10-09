@@ -22,7 +22,7 @@ router.use("/api/v1", multerRoutes); // users
 
 // USERS
 router.use("/api/v1/users", usersRoutes); // users
-router.use("/api/v1/rest-auth", authRoutes); // auth
+router.use("/api/v1/auth-user", authRoutes); // auth
 
 // APP
 router.use("/api/v1/forms", formsRoutes);
